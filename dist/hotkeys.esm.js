@@ -1,5 +1,5 @@
 /*!
- * hotkeys-js v3.8.7
+ * hotkeys-js-ext v3.8.8
  * A simple micro-library for defining and dispatching keyboard shortcuts. It has no dependencies.
  * 
  * Copyright (c) 2021 kenny wong <wowohoo@qq.com>
@@ -177,6 +177,11 @@ function getScope() {
 
 function getPressedKeyCodes() {
   return _downKeys.slice(0);
+} // 获得原始的按键列表,不复制数组
+
+
+function getDownKeys() {
+  return _downKeys;
 } // 表单控件控件判断 返回 Boolean
 // hotkey is effective only when filter return true
 
@@ -427,7 +432,7 @@ function dispatch(event) {
   } // 获取范围 默认为 `all`
 
 
-  var scope = getScope(); // 对任何快捷键都需要做的处理
+  var scope = getScope(); // 对任何快捷键都需要做的处理 "*"
 
   if (asterisk) {
     for (var i = 0; i < asterisk.length; i++) {
@@ -464,6 +469,15 @@ function dispatch(event) {
 
 function isElementBind(element) {
   return elementHasBindEvent.indexOf(element) > -1;
+}
+
+function clearDownKeys() {
+  _downKeys = [];
+  /* eslint-disable */
+
+  for (var key in _modifier) {
+    hotkeys[key] = false;
+  }
 }
 
 function hotkeys(key, option, method) {
@@ -529,9 +543,9 @@ function hotkeys(key, option, method) {
     addEvent(element, 'keydown', function (e) {
       dispatch(e);
     });
-    addEvent(window, 'focus', function () {
-      _downKeys = [];
-    });
+    addEvent(window, 'focus', clearDownKeys); // hack 在丢失焦点的时候也清理快捷键
+
+    addEvent(window, 'blur', clearDownKeys);
     addEvent(element, 'keyup', function (e) {
       dispatch(e);
       clearModifier(e);
@@ -546,7 +560,11 @@ var _api = {
   getPressedKeyCodes: getPressedKeyCodes,
   isPressed: isPressed,
   filter: filter,
-  unbind: unbind
+  unbind: unbind,
+  dispatch: dispatch,
+  clearModifier: clearModifier,
+  getDownKeys: getDownKeys,
+  clearDownKeys: clearDownKeys
 };
 
 for (var a in _api) {

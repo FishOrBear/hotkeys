@@ -16,7 +16,7 @@ type Options = {
   keyup?: boolean | null;
   keydown?: boolean | null;
   splitKey?: string;
-}
+};
 
 interface Hotkeys {
   (key: string, method: KeyHandler): void;
@@ -47,6 +47,15 @@ interface Hotkeys {
   getPressedKeyCodes(): number[];
 
   filter(event: KeyboardEvent): boolean;
+
+  //响应keydown
+  dispatch(event: KeyboardEvent): void;
+  //响应keyup
+  clearModifier(event: KeyboardEvent): void;
+  //获得未拷贝的按键列表
+  getDownKeys(): number[];
+  //清理所有的按下的按键
+  clearDownKeys(): void;
 }
 // https://github.com/eiriklv/react-masonry-component/issues/57
 declare var hotkeys: Hotkeys;

@@ -1,5 +1,5 @@
-import { addEvent, getMods, getKeys, compareArray } from './utils';
-import { _keyMap, _modifier, modifierMap, _mods, _handlers } from './var';
+import { addEvent, compareArray, getKeys, getMods } from './utils';
+import { modifierMap, _handlers, _keyMap, _modifier, _mods } from './var';
 
 let _downKeys = []; // 记录摁下的绑定键
 
@@ -22,6 +22,11 @@ function getScope() {
 // 获取摁下绑定键的键值
 function getPressedKeyCodes() {
   return _downKeys.slice(0);
+}
+
+// 获得原始的按键列表,不复制数组
+function getDownKeys() {
+  return _downKeys;
 }
 
 // 表单控件控件判断 返回 Boolean
@@ -273,13 +278,13 @@ function dispatch(event) {
 
   // 获取范围 默认为 `all`
   const scope = getScope();
-  // 对任何快捷键都需要做的处理
+  // 对任何快捷键都需要做的处理 "*"
   if (asterisk) {
     for (let i = 0; i < asterisk.length; i++) {
       if (
         asterisk[i].scope === scope
         && ((event.type === 'keydown' && asterisk[i].keydown)
-        || (event.type === 'keyup' && asterisk[i].keyup))
+          || (event.type === 'keyup' && asterisk[i].keyup))
       ) {
         eventHandler(event, asterisk[i], scope);
       }
@@ -313,6 +318,14 @@ function dispatch(event) {
 // 判断 element 是否已经绑定事件
 function isElementBind(element) {
   return elementHasBindEvent.indexOf(element) > -1;
+}
+
+function clearDownKeys() {
+  _downKeys = [];
+  /* eslint-disable */
+  for (const key in _modifier) {
+    hotkeys[key] = false;
+  }
 }
 
 function hotkeys(key, option, method) {
@@ -372,9 +385,9 @@ function hotkeys(key, option, method) {
     addEvent(element, 'keydown', (e) => {
       dispatch(e);
     });
-    addEvent(window, 'focus', () => {
-      _downKeys = [];
-    });
+    addEvent(window, 'focus', clearDownKeys);
+    // hack 在丢失焦点的时候也清理快捷键
+    addEvent(window, 'blur', clearDownKeys);
     addEvent(element, 'keyup', (e) => {
       dispatch(e);
       clearModifier(e);
@@ -390,6 +403,10 @@ const _api = {
   isPressed,
   filter,
   unbind,
+  dispatch,
+  clearModifier,
+  getDownKeys,
+  clearDownKeys,
 };
 for (const a in _api) {
   if (Object.prototype.hasOwnProperty.call(_api, a)) {
